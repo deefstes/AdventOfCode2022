@@ -6,25 +6,6 @@ import (
 	"github.com/deefstes/AdventOfCode2022/helpers"
 )
 
-type ElfGroup struct {
-	rucksacks []string
-}
-
-func MakeElfGroup(rucksacks []string) ElfGroup {
-	return ElfGroup{
-		rucksacks: rucksacks,
-	}
-}
-
-func (e *ElfGroup) Duplicates() []byte {
-	dups := []byte(e.rucksacks[0])
-	for i := 1; i < len(e.rucksacks); i++ {
-		dups = FindDuplicates(dups, []byte(e.rucksacks[i]))
-	}
-
-	return dups
-}
-
 func main() {
 	lines := helpers.ReadInputFile()
 
@@ -45,6 +26,25 @@ func main() {
 	}
 
 	fmt.Printf("Total priority: %d\n", runningCount)
+}
+
+type ElfGroup struct {
+	rucksacks []string
+}
+
+func MakeElfGroup(rucksacks []string) ElfGroup {
+	return ElfGroup{
+		rucksacks: rucksacks,
+	}
+}
+
+func (e *ElfGroup) Duplicates() []byte {
+	dups := []byte(e.rucksacks[0])
+	for i := 1; i < len(e.rucksacks); i++ {
+		dups = FindDuplicates(dups, []byte(e.rucksacks[i]))
+	}
+
+	return dups
 }
 
 func Contains(compartment []byte, item byte) bool {
