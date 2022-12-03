@@ -1,25 +1,14 @@
 package main
 
 import (
-	"flag"
 	"fmt"
-	"log"
-	"os"
 	"strings"
+
+	"github.com/deefstes/AdventOfCode2022/helpers"
 )
 
 func main() {
-	var inputFileName string
-	flag.StringVar(&inputFileName, "input", "input.txt", "input file name")
-	flag.Parse()
-	fmt.Printf("input file name: %s\n", inputFileName)
-
-	// Read input file
-	file, err := os.ReadFile(inputFileName)
-	if err != nil {
-		log.Fatalf("reading input file: %v", err)
-	}
-	lines := strings.Split(string(file), "\n")
+	lines := helpers.ReadInputFile()
 
 	runningScore := 0
 	for _, line := range lines {
