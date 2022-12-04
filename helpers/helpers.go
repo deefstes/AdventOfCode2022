@@ -19,7 +19,7 @@ func ReadInputFile() []string {
 	if err != nil {
 		log.Fatalf("reading input file: %v", err)
 	}
-	lines := strings.Split(string(file), "\n")
+	lines := strings.Split(strings.TrimRight(string(file), "\n"), "\n")
 
 	return lines
 }
