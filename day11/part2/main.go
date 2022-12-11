@@ -10,7 +10,7 @@ import (
 func main() {
 	lines := helpers.ReadInputFile()
 
-	var troop day11.Troop
+	troop := day11.NewTroop()
 	for i := 0; i < len(lines); i = i + 7 {
 		troop.AddMonkey(day11.NewMonkey(lines[i : i+6]))
 	}
@@ -18,7 +18,7 @@ func main() {
 	fmt.Printf("Starting troop:\n%s\n\n", troop.String())
 
 	for i := 0; i < 10000; i++ {
-		troop.PlayRound(false)
+		troop.PlayRound(false, true)
 		fmt.Printf("After round %d:\n%s\n\n", i+1, troop.String())
 	}
 

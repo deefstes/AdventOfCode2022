@@ -8,20 +8,26 @@ import (
 )
 
 type Troop struct {
-	monkeys []Monkey
+	monkeys    []Monkey
+	calmingDiv int64
+}
+
+func NewTroop() Troop {
+	return Troop{calmingDiv: 1}
 }
 
 func (t *Troop) AddMonkey(m Monkey) {
 	t.monkeys = append(t.monkeys, m)
+	t.calmingDiv = t.calmingDiv * m.testDiv
 }
 
 func (t *Troop) String() string {
-	var retval string
+	var troop string
 	for _, m := range t.monkeys {
-		retval = fmt.Sprintf("%s\n%s", retval, m.String())
+		troop = fmt.Sprintf("%s\n%s", troop, m.String())
 	}
 
-	return strings.TrimLeft(retval, "\n")
+	return strings.TrimLeft(troop, "\n")
 }
 
 func (t *Troop) SortInspections() []Monkey {
@@ -29,9 +35,9 @@ func (t *Troop) SortInspections() []Monkey {
 	return t.monkeys
 }
 
-func (t *Troop) PlayRound(withRelief bool) {
+func (t *Troop) PlayRound(withRelief, withCalming bool) {
 	for i := range t.monkeys {
-		t.monkeys[i].PlayRound(t, withRelief)
+		t.monkeys[i].PlayRound(t, withRelief, withCalming)
 	}
 }
 
@@ -70,11 +76,11 @@ func NewMonkey(lines []string) Monkey {
 	return m
 }
 
-func (m *Monkey) AddItem(i int64) {
-	// div := i / m.testDiv
-	// mult := (div - 1) * m.testDiv
-	// newi := i - mult
-	// m.items = append(m.items, newi)
+func (m *Monkey) AddItem(i int64, withRelief bool, withCalming bool, troop *Troop) {
+	if withCalming {
+		i = i % troop.calmingDiv
+	}
+
 	m.items = append(m.items, i)
 }
 
@@ -87,7 +93,7 @@ func (m *Monkey) String() string {
 	return fmt.Sprintf("%s: %s", m.Name, strings.TrimPrefix(retval, ", "))
 }
 
-func (m *Monkey) PlayRound(t *Troop, withRelief bool) {
+func (m *Monkey) PlayRound(t *Troop, withRelief, withCalming bool) {
 	for _, v := range m.items {
 		m.Inspections = m.Inspections + 1
 
@@ -111,11 +117,9 @@ func (m *Monkey) PlayRound(t *Troop, withRelief bool) {
 		}
 
 		if v%(m.testDiv) == 0 {
-			//t.monkeys[m.monkeyTrue].items = append(t.monkeys[m.monkeyTrue].items, v)
-			t.monkeys[m.monkeyTrue].AddItem(v)
+			t.monkeys[m.monkeyTrue].AddItem(v, withRelief, withCalming, t)
 		} else {
-			//t.monkeys[m.monkeyFalse].items = append(t.monkeys[m.monkeyFalse].items, v)
-			t.monkeys[m.monkeyFalse].AddItem(v)
+			t.monkeys[m.monkeyFalse].AddItem(v, withRelief, withCalming, t)
 		}
 	}
 	m.items = make([]int64, 0)
