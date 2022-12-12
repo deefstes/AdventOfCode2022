@@ -31,8 +31,12 @@ func IsNumber(s string) bool {
 	return err == nil
 }
 
-func OnedFromTwod(x, y, width int) int {
+func OnedFromXY(x, y, width int) int {
 	return y*width + x
+}
+
+func OnedFromCoords(c Coords, width int) int {
+	return c.Y*width + c.X
 }
 
 type Coords struct {
@@ -61,4 +65,75 @@ func Abs(val int) int {
 		return -val
 	}
 	return val
+}
+
+type Stack struct {
+	stack []string
+}
+
+func (s *Stack) Pop(cnt int) []string {
+	retval := s.stack[len(s.stack)-cnt:]
+	s.stack = s.stack[:len(s.stack)-cnt]
+	return retval
+}
+
+func (s *Stack) Peek() string {
+	return s.stack[len(s.stack)-1]
+}
+
+func (s *Stack) Push(items []string) {
+	s.stack = append(s.stack, items...)
+}
+
+func (s *Stack) Reverse() {
+	var retval []string
+	for i := len(s.stack) - 1; i >= 0; i-- {
+		retval = append(retval, s.stack[i])
+	}
+
+	s.stack = retval
+}
+
+func (s *Stack) Contains(val string) bool {
+	for _, v := range s.stack {
+		if v == val {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (s *Stack) String(delim string) string {
+	return strings.Join(s.stack, delim)
+}
+
+type Queue[T any] []T
+
+func (q *Queue[T]) Add(x T) {
+	*q = append(*q, x)
+}
+
+func (q *Queue[T]) Get() T {
+	ret := (*q)[0]
+	*q = (*q)[1:]
+
+	return ret
+}
+
+func (q *Queue[T]) Len() int {
+	return len(*q)
+}
+
+func ReverseString(s string) string {
+	rns := []rune(s) // convert to rune
+	for i, j := 0, len(rns)-1; i < j; i, j = i+1, j-1 {
+
+		// swap the letters of the string,
+		// like first with last and so on.
+		rns[i], rns[j] = rns[j], rns[i]
+	}
+
+	// return the reversed string.
+	return string(rns)
 }

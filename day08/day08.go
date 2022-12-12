@@ -26,12 +26,12 @@ func (f *Forest) String() string {
 }
 
 func (f *Forest) IsVisible(x, y int) bool {
-	refTree := f.trees[helpers.OnedFromTwod(x, y, f.width)]
+	refTree := f.trees[helpers.OnedFromXY(x, y, f.width)]
 
 	// Check for northern visibility
 	visCheck := true
 	for yy := y - 1; yy >= 0; yy-- {
-		if f.trees[helpers.OnedFromTwod(x, yy, f.width)] >= refTree {
+		if f.trees[helpers.OnedFromXY(x, yy, f.width)] >= refTree {
 			visCheck = false
 		}
 	}
@@ -42,7 +42,7 @@ func (f *Forest) IsVisible(x, y int) bool {
 	// Check for southern visibility
 	visCheck = true
 	for yy := y + 1; yy < f.height; yy++ {
-		if f.trees[helpers.OnedFromTwod(x, yy, f.width)] >= refTree {
+		if f.trees[helpers.OnedFromXY(x, yy, f.width)] >= refTree {
 			visCheck = false
 		}
 	}
@@ -53,7 +53,7 @@ func (f *Forest) IsVisible(x, y int) bool {
 	// Check for western visibility
 	visCheck = true
 	for xx := x - 1; xx >= 0; xx-- {
-		if f.trees[helpers.OnedFromTwod(xx, y, f.width)] >= refTree {
+		if f.trees[helpers.OnedFromXY(xx, y, f.width)] >= refTree {
 			visCheck = false
 		}
 	}
@@ -64,7 +64,7 @@ func (f *Forest) IsVisible(x, y int) bool {
 	// Check for eastern visibility
 	visCheck = true
 	for xx := x + 1; xx < f.width; xx++ {
-		if f.trees[helpers.OnedFromTwod(xx, y, f.width)] >= refTree {
+		if f.trees[helpers.OnedFromXY(xx, y, f.width)] >= refTree {
 			visCheck = false
 		}
 	}
@@ -76,13 +76,13 @@ func (f *Forest) IsVisible(x, y int) bool {
 }
 
 func (f *Forest) ScenicScore(x, y int) int64 {
-	refTree := f.trees[helpers.OnedFromTwod(x, y, f.width)]
+	refTree := f.trees[helpers.OnedFromXY(x, y, f.width)]
 
 	// Look north
 	var distN int64
 	for yy := y - 1; yy >= 0; yy-- {
 		distN = distN + 1
-		if f.trees[helpers.OnedFromTwod(x, yy, f.width)] >= refTree {
+		if f.trees[helpers.OnedFromXY(x, yy, f.width)] >= refTree {
 			break
 		}
 	}
@@ -91,7 +91,7 @@ func (f *Forest) ScenicScore(x, y int) int64 {
 	var distS int64
 	for yy := y + 1; yy < f.height; yy++ {
 		distS = distS + 1
-		if f.trees[helpers.OnedFromTwod(x, yy, f.width)] >= refTree {
+		if f.trees[helpers.OnedFromXY(x, yy, f.width)] >= refTree {
 			break
 		}
 	}
@@ -100,7 +100,7 @@ func (f *Forest) ScenicScore(x, y int) int64 {
 	var distW int64
 	for xx := x - 1; xx >= 0; xx-- {
 		distW = distW + 1
-		if f.trees[helpers.OnedFromTwod(xx, y, f.width)] >= refTree {
+		if f.trees[helpers.OnedFromXY(xx, y, f.width)] >= refTree {
 			break
 		}
 	}
@@ -109,7 +109,7 @@ func (f *Forest) ScenicScore(x, y int) int64 {
 	var distE int64
 	for xx := x + 1; xx < f.width; xx++ {
 		distE = distE + 1
-		if f.trees[helpers.OnedFromTwod(xx, y, f.width)] >= refTree {
+		if f.trees[helpers.OnedFromXY(xx, y, f.width)] >= refTree {
 			break
 		}
 	}
