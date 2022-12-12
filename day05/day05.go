@@ -4,17 +4,19 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/deefstes/AdventOfCode2022/helpers"
 )
 
 type Storage struct {
-	stacks   []Stack
+	stacks   []helpers.Stack[string]
 	moveList []Movement
 }
 
 func (s *Storage) String() string {
 	retval := ""
 	for i, s := range s.stacks {
-		retval = fmt.Sprintf("%s%d: %s\n", retval, i+1, s.String())
+		retval = fmt.Sprintf("%s%d: %s\n", retval, i+1, s.String(",", func(val string) string { return val }))
 	}
 
 	return retval
@@ -40,7 +42,7 @@ func (s *Storage) DoWork(singles bool) string {
 }
 
 func MakeStorage(input []string) Storage {
-	var stacks []Stack
+	var stacks []helpers.Stack[string]
 	var movements []Movement
 	for _, line := range input {
 		if line == "" {
@@ -50,7 +52,7 @@ func MakeStorage(input []string) Storage {
 		if line[0] == ' ' && line[1] != '1' {
 			// This is a line defining stack entries
 			if len(stacks) == 0 {
-				stacks = make([]Stack, (len(line)+1)/4)
+				stacks = make([]helpers.Stack[string], (len(line)+1)/4)
 			}
 			for i := 0; i < len(stacks); i++ {
 				if line[i*4+1] != ' ' {
@@ -66,7 +68,7 @@ func MakeStorage(input []string) Storage {
 	}
 
 	// Reverse all stacks
-	var revStacks []Stack
+	var revStacks []helpers.Stack[string]
 	for _, s := range stacks {
 		s.Reverse()
 		revStacks = append(revStacks, s)
@@ -96,35 +98,4 @@ func MakeMovement(input string) Movement {
 		Destination: int(destination),
 		Count:       int(count),
 	}
-}
-
-type Stack struct {
-	stack []string
-}
-
-func (s *Stack) Pop(cnt int) []string {
-	retval := s.stack[len(s.stack)-cnt:]
-	s.stack = s.stack[:len(s.stack)-cnt]
-	return retval
-}
-
-func (s *Stack) Peek() string {
-	return s.stack[len(s.stack)-1]
-}
-
-func (s *Stack) Push(items []string) {
-	s.stack = append(s.stack, items...)
-}
-
-func (s *Stack) Reverse() {
-	var retval []string
-	for i := len(s.stack) - 1; i >= 0; i-- {
-		retval = append(retval, s.stack[i])
-	}
-
-	s.stack = retval
-}
-
-func (s *Stack) String() string {
-	return strings.Join(s.stack, ",")
 }
