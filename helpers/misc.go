@@ -37,6 +37,20 @@ func Abs(val int) int {
 	return val
 }
 
+func Max(v1, v2 int) int {
+	if v1 > v2 {
+		return v1
+	}
+	return v2
+}
+
+func Min(v1, v2 int) int {
+	if v1 < v2 {
+		return v1
+	}
+	return v2
+}
+
 func ReverseString(s string) string {
 	rns := []rune(s) // convert to rune
 	for i, j := 0, len(rns)-1; i < j; i, j = i+1, j-1 {
