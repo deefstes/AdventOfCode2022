@@ -26,10 +26,10 @@ func (s *Storage) DoWork(singles bool) string {
 	for _, movement := range s.moveList {
 		if singles {
 			for cnt := 0; cnt < movement.Count; cnt++ {
-				s.stacks[movement.Destination-1].Push(s.stacks[movement.Origin-1].Pop(1))
+				s.stacks[movement.Destination-1].PushList(s.stacks[movement.Origin-1].Pop(1))
 			}
 		} else {
-			s.stacks[movement.Destination-1].Push(s.stacks[movement.Origin-1].Pop(movement.Count))
+			s.stacks[movement.Destination-1].PushList(s.stacks[movement.Origin-1].Pop(movement.Count))
 		}
 	}
 
@@ -56,7 +56,7 @@ func MakeStorage(input []string) Storage {
 			}
 			for i := 0; i < len(stacks); i++ {
 				if line[i*4+1] != ' ' {
-					stacks[i].Push([]string{string(line[i*4+1])})
+					stacks[i].PushList([]string{string(line[i*4+1])})
 				}
 			}
 		}

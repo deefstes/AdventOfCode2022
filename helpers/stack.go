@@ -16,7 +16,11 @@ func (s *Stack[T]) Peek() T {
 	return s.stack[len(s.stack)-1]
 }
 
-func (s *Stack[T]) Push(items []T) {
+func (s *Stack[T]) Push(item T) {
+	s.stack = append(s.stack, item)
+}
+
+func (s *Stack[T]) PushList(items []T) {
 	s.stack = append(s.stack, items...)
 }
 
@@ -37,6 +41,10 @@ func (s *Stack[T]) Contains(val T, eq func(t1, t2 T) bool) bool {
 	}
 
 	return false
+}
+
+func (s *Stack[T]) Size() int {
+	return len(s.stack)
 }
 
 func (s *Stack[T]) String(delim string, convFunc func(val T) string) string {
