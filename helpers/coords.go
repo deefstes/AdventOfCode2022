@@ -16,20 +16,20 @@ func (c *Coords) String() string {
 	return fmt.Sprintf("%d,%d", c.X, c.Y)
 }
 
-func (c Coords) Down() Coords {
-	return NewCoords(c.X, c.Y+1)
+func (c Coords) Down(d int) Coords {
+	return NewCoords(c.X, c.Y+d)
 }
 
-func (c Coords) Left() Coords {
-	return NewCoords(c.X-1, c.Y)
+func (c Coords) Left(d int) Coords {
+	return NewCoords(c.X-d, c.Y)
 }
 
-func (c Coords) Up() Coords {
-	return NewCoords(c.X, c.Y-1)
+func (c Coords) Up(d int) Coords {
+	return NewCoords(c.X, c.Y-d)
 }
 
-func (c Coords) Right() Coords {
-	return NewCoords(c.X+1, c.Y)
+func (c Coords) Right(d int) Coords {
+	return NewCoords(c.X+d, c.Y)
 }
 
 func (c1 *Coords) SimpleDist(c2 Coords) int {
@@ -38,6 +38,29 @@ func (c1 *Coords) SimpleDist(c2 Coords) int {
 	d := math.Sqrt(float64(dx*dx + dy*dy))
 
 	return int(d)
+}
+
+func (c1 *Coords) ManhattanDist(c2 Coords) int {
+	dx := Abs(c1.X - c2.X)
+	dy := Abs(c1.Y - c2.Y)
+	d := dx + dy
+
+	return int(d)
+}
+
+func (c Coords) ManhattanNeighbourhood(dist int) []Coords {
+	var neighbours []Coords
+	neighbours = append(neighbours, c)
+	for x := 1; x <= dist; x++ {
+		for y := 0; y <= dist-x; y++ {
+			neighbours = append(neighbours, c.Right(x).Down(y))
+			neighbours = append(neighbours, c.Up(x).Right(y))
+			neighbours = append(neighbours, c.Left(x).Up(y))
+			neighbours = append(neighbours, c.Down(x).Left(y))
+		}
+	}
+
+	return neighbours
 }
 
 func NewCoords(x, y int) Coords {

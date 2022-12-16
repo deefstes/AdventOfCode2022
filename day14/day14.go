@@ -70,20 +70,20 @@ func (r *RockWall) AddSand(e helpers.Coords) bool {
 		}
 
 		// Check if sand can move down
-		if !r.obstacles[e.Down()] && !r.sand[e.Down()] && e.Down().Y < r.limitB+2 {
-			e = e.Down()
+		if !r.obstacles[e.Down(1)] && !r.sand[e.Down(1)] && e.Down(1).Y < r.limitB+2 {
+			e = e.Down(1)
 			continue
 		}
 
 		// Check if sand can move down-left
-		if !r.obstacles[e.Down().Left()] && !r.sand[e.Down().Left()] && e.Down().Y < r.limitB+2 {
-			e = e.Down().Left()
+		if !r.obstacles[e.Down(1).Left(1)] && !r.sand[e.Down(1).Left(1)] && e.Down(1).Y < r.limitB+2 {
+			e = e.Down(1).Left(1)
 			continue
 		}
 
 		// Check if sand can move down-right
-		if !r.obstacles[e.Down().Right()] && !r.sand[e.Down().Right()] && e.Down().Y < r.limitB+2 {
-			e = e.Down().Right()
+		if !r.obstacles[e.Down(1).Right(1)] && !r.sand[e.Down(1).Right(1)] && e.Down(1).Y < r.limitB+2 {
+			e = e.Down(1).Right(1)
 			continue
 		}
 
