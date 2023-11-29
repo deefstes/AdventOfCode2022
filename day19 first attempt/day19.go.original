@@ -1,0 +1,384 @@
+package day19
+
+import (
+	"fmt"
+	"regexp"
+	"sort"
+	"strconv"
+	"strings"
+
+	"github.com/deefstes/AdventOfCode2022/helpers"
+)
+
+type Resource int
+
+const (
+	ore Resource = iota
+	clay
+	obsidian
+	geode
+)
+
+type Robot struct {
+	resource string
+	costs    map[string]int
+}
+
+func NewRobot(input string) Robot {
+	var robot Robot
+	robot.costs = make(map[string]int)
+
+	robotRegex := regexp.MustCompile(`Each (\w+) robot costs (\d+) (\w+)( and (\d+) (\w+))*\.`)
+	matches := robotRegex.FindStringSubmatch(input)
+
+	robot.resource = matches[1]
+	for i := 1; i < len(matches); i = i + 3 {
+		if matches[i] == "" {
+			continue
+		}
+		val, _ := strconv.Atoi(matches[i+1])
+		robot.costs[matches[i+2]] = val
+	}
+
+	return robot
+}
+
+type State struct {
+	timeStamp int
+	newRobot  string
+	resources map[string]int
+	robots    map[string]int
+}
+
+func (s *State) String(resources, robots bool) string {
+	var retval strings.Builder
+	fmt.Fprintf(&retval, "%d,%s", s.timeStamp, s.newRobot)
+	if robots {
+		fmt.Fprintf(&retval, ",%d,%d,%d,%d", s.robots["ore"], s.robots["clay"], s.robots["obsidian"], s.robots["geode"])
+	}
+	if resources {
+		fmt.Fprintf(&retval, ",%d,%d,%d,%d", s.resources["ore"], s.resources["clay"], s.resources["obsidian"], s.resources["geode"])
+	}
+
+	return retval.String()
+}
+
+func (s *State) Copy() State {
+	newState := State{
+		timeStamp: s.timeStamp,
+		newRobot:  s.newRobot,
+		resources: make(map[string]int),
+		robots:    make(map[string]int),
+	}
+
+	for k, v := range s.resources {
+		newState.resources[k] = v
+	}
+
+	for k, v := range s.robots {
+		newState.robots[k] = v
+	}
+
+	return newState
+}
+
+type Blueprint struct {
+	id     int
+	robots []Robot
+}
+
+func GetCheckpoints() []State {
+	var cps []State
+
+	cps = append(cps, State{
+		timeStamp: 1,
+		newRobot:  "",
+		resources: map[string]int{"ore": 1},
+	})
+	cps = append(cps, State{
+		timeStamp: 2,
+		newRobot:  "",
+		resources: map[string]int{"ore": 2},
+	})
+	cps = append(cps, State{
+		timeStamp: 3,
+		newRobot:  "clay",
+		resources: map[string]int{"ore": 1},
+	})
+	cps = append(cps, State{
+		timeStamp: 4,
+		newRobot:  "",
+		resources: map[string]int{"ore": 2, "clay": 1},
+	})
+	cps = append(cps, State{
+		timeStamp: 5,
+		newRobot:  "clay",
+		resources: map[string]int{"ore": 1, "clay": 2},
+	})
+	cps = append(cps, State{
+		timeStamp: 6,
+		newRobot:  "",
+		resources: map[string]int{"ore": 2, "clay": 4},
+	})
+	cps = append(cps, State{
+		timeStamp: 7,
+		newRobot:  "clay",
+		resources: map[string]int{"ore": 1, "clay": 6},
+	})
+	cps = append(cps, State{
+		timeStamp: 8,
+		newRobot:  "",
+		resources: map[string]int{"ore": 2, "clay": 9},
+	})
+	cps = append(cps, State{
+		timeStamp: 9,
+		newRobot:  "",
+		resources: map[string]int{"ore": 3, "clay": 12},
+	})
+	cps = append(cps, State{
+		timeStamp: 10,
+		newRobot:  "",
+		resources: map[string]int{"ore": 4, "clay": 15},
+	})
+	cps = append(cps, State{
+		timeStamp: 11,
+		newRobot:  "obsidian",
+		resources: map[string]int{"ore": 2, "clay": 4},
+	})
+	cps = append(cps, State{
+		timeStamp: 12,
+		newRobot:  "clay",
+		resources: map[string]int{"ore": 1, "clay": 7, "obsidian": 1},
+	})
+	cps = append(cps, State{
+		timeStamp: 13,
+		newRobot:  "",
+		resources: map[string]int{"ore": 2, "clay": 11, "obsidian": 2},
+	})
+	cps = append(cps, State{
+		timeStamp: 14,
+		newRobot:  "",
+		resources: map[string]int{"ore": 3, "clay": 15, "obsidian": 3},
+	})
+	cps = append(cps, State{
+		timeStamp: 15,
+		newRobot:  "obsidian",
+		resources: map[string]int{"ore": 1, "clay": 5, "obsidian": 4},
+	})
+	cps = append(cps, State{
+		timeStamp: 16,
+		newRobot:  "",
+		resources: map[string]int{"ore": 2, "clay": 9, "obsidian": 6},
+	})
+	cps = append(cps, State{
+		timeStamp: 17,
+		newRobot:  "",
+		resources: map[string]int{"ore": 3, "clay": 13, "obsidian": 8},
+	})
+	cps = append(cps, State{
+		timeStamp: 18,
+		newRobot:  "geode",
+		resources: map[string]int{"ore": 2, "clay": 17, "obsidian": 3},
+	})
+	cps = append(cps, State{
+		timeStamp: 19,
+		newRobot:  "",
+		resources: map[string]int{"ore": 3, "clay": 21, "obsidian": 5, "geode": 1},
+	})
+	cps = append(cps, State{
+		timeStamp: 20,
+		newRobot:  "",
+		resources: map[string]int{"ore": 4, "clay": 25, "obsidian": 7, "geode": 2},
+	})
+	cps = append(cps, State{
+		timeStamp: 21,
+		newRobot:  "geode",
+		resources: map[string]int{"ore": 3, "clay": 29, "obsidian": 2, "geode": 3},
+	})
+	cps = append(cps, State{
+		timeStamp: 22,
+		newRobot:  "",
+		resources: map[string]int{"ore": 4, "clay": 33, "obsidian": 4, "geode": 5},
+	})
+	cps = append(cps, State{
+		timeStamp: 23,
+		newRobot:  "",
+		resources: map[string]int{"ore": 5, "clay": 37, "obsidian": 6, "geode": 7},
+	})
+	cps = append(cps, State{
+		timeStamp: 24,
+		newRobot:  "",
+		resources: map[string]int{"ore": 6, "clay": 41, "obsidian": 8, "geode": 9},
+	})
+
+	return cps
+}
+
+func (bp *Blueprint) BFS(depth int) int {
+	var stateQueue helpers.Queue[State]
+	startingState := State{
+		timeStamp: 0,
+		resources: make(map[string]int),
+		robots:    make(map[string]int),
+	}
+	startingState.robots["ore"] = 1
+	stateQueue.Add(startingState)
+
+	bestValue := 0
+	bestAtLevel := make(map[int]int)
+	inspected := make(map[string]bool)
+
+	// checkpoints := GetCheckpoints()
+
+	maxQ := 0
+	for stateQueue.Len() > 0 {
+		curState := stateQueue.Get()
+		if curState.timeStamp > depth {
+			continue
+		}
+
+		bestValue = helpers.Max(bestValue, curState.resources["geode"])
+		bestAtLevel[curState.timeStamp] = helpers.Max(bestAtLevel[curState.timeStamp], curState.resources["geode"])
+		if curState.resources["geode"] < bestAtLevel[curState.timeStamp] {
+			continue
+		}
+		key := curState.String(true, true)
+		if inspected[key] {
+			continue
+		}
+		inspected[key] = true
+
+		// Calculate new state
+		curState.resources["ore"] = curState.resources["ore"] + curState.robots["ore"]
+		curState.resources["clay"] = curState.resources["clay"] + curState.robots["clay"]
+		curState.resources["obsidian"] = curState.resources["obsidian"] + curState.robots["obsidian"]
+		curState.resources["geode"] = curState.resources["geode"] + curState.robots["geode"]
+		if curState.newRobot != "" {
+			curState.robots[curState.newRobot] = curState.robots[curState.newRobot] + 1
+		}
+
+		// Add all possible next steps to queue
+		nextSteps := bp.PossibleBuilds(curState)
+		nextSteps = append(nextSteps, "") // action = do nothing
+		for _, step := range nextSteps {
+			newState := curState.Copy()
+			newState.timeStamp = curState.timeStamp + 1
+			newState.newRobot = step
+			if step != "" {
+				// Pay resources for new robot
+				for _, robot := range bp.robots {
+					if robot.resource == newState.newRobot {
+						for resource, cost := range robot.costs {
+							newState.resources[resource] = newState.resources[resource] - cost
+						}
+						break
+					}
+				}
+			}
+			// for _, cp := range checkpoints {
+			// 	cpstr, nsstr := cp.String(true, false), newState.String(true, false)
+			// 	if cpstr == nsstr {
+			// 		fmt.Printf("Checkpoint reached: %s\n", cpstr)
+			// 		break
+			// 	}
+			// }
+			stateQueue.Add(newState)
+			maxQ = helpers.Max(maxQ, stateQueue.Len())
+		}
+	}
+
+	fmt.Printf("Max Queue Length = %d\n", maxQ)
+	return bestValue
+}
+
+func (bp *Blueprint) Solve() int {
+	geodes := bp.BFS(24)
+	return geodes * bp.id
+}
+
+func (bp *Blueprint) SolveState(depth int, s State, buildRobot string) int {
+	fmt.Printf("%d,", depth)
+	if depth <= 0 {
+		return s.resources["geode"]
+	}
+
+	// Calculate new state
+	s.resources["ore"] = s.resources["ore"] + s.robots["ore"]
+	s.resources["clay"] = s.resources["clay"] + s.robots["clay"]
+	s.resources["obsidian"] = s.resources["obsidian"] + s.robots["obsidian"]
+	s.resources["geode"] = s.resources["geode"] + s.robots["geode"]
+
+	if buildRobot != "" {
+		s.robots[buildRobot] = s.robots[buildRobot] + 1
+	}
+
+	// Try all possible actions
+	var geodeVals []int
+	geodeVals = append(geodeVals, bp.SolveState(depth-1, s.Copy(), "")) // action = do nothing
+	for _, a := range bp.PossibleBuilds(s) {
+		geodeVals = append(geodeVals, bp.SolveState(depth-1, s.Copy(), a))
+	}
+
+	sort.Ints(geodeVals)
+	return geodeVals[0]
+}
+
+func (bp *Blueprint) PossibleBuilds(s State) []string {
+	var possibles []string
+	for _, robot := range bp.robots {
+		canBuild := true
+		for resource, val := range robot.costs {
+			if val > s.resources[resource] {
+				canBuild = false
+				break
+			}
+		}
+		if canBuild {
+			possibles = append(possibles, robot.resource)
+		}
+	}
+
+	return possibles
+}
+
+func NewBlueprint(input string) Blueprint {
+	var blueprint Blueprint
+
+	blueprintRegex := regexp.MustCompile(`Blueprint (\d+):`)
+	matches := blueprintRegex.FindStringSubmatch(input)
+	blueprint.id, _ = strconv.Atoi(matches[1])
+
+	robotsRegex := regexp.MustCompile(`Each (\w+) robot costs (\d+) (\w+)( and (\d+) (\w+))*\.`)
+	robotMatches := robotsRegex.FindAllStringSubmatch(input, -1)
+
+	for _, robot := range robotMatches {
+		blueprint.robots = append(blueprint.robots, NewRobot(robot[0]))
+	}
+
+	return blueprint
+}
+
+type System struct {
+	blueprints []Blueprint
+}
+
+func (s *System) Solve() int {
+	var total int
+	for _, bp := range s.blueprints {
+		total = total + bp.Solve()
+	}
+	return total
+}
+
+func NewSystem(input []string) System {
+	var system System
+
+	for _, line := range input {
+		if line == "" {
+			break
+		}
+		system.blueprints = append(system.blueprints, NewBlueprint(line))
+	}
+
+	return system
+}

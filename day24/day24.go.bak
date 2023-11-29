@@ -1,0 +1,303 @@
+package day24
+
+import (
+	"fmt"
+	"sort"
+	"strings"
+
+	"github.com/deefstes/AdventOfCode2022/helpers"
+)
+
+type Direction int
+
+const (
+	north Direction = iota
+	east
+	south
+	west
+	wait
+	dead
+)
+
+func (d Direction) String(symbolOnly bool) string {
+	switch d {
+	case north:
+		if symbolOnly {
+			return "^"
+		} else {
+			return "up"
+		}
+	case east:
+		if symbolOnly {
+			return ">"
+		} else {
+			return "right"
+		}
+	case south:
+		if symbolOnly {
+			return "v"
+		} else {
+			return "down"
+		}
+	case west:
+		if symbolOnly {
+			return "<"
+		} else {
+			return "left"
+		}
+	case wait:
+		if symbolOnly {
+			return "🕑"
+		} else {
+			return "wait"
+		}
+	case dead:
+		if symbolOnly {
+			return "💀"
+		} else {
+			return "dead"
+		}
+	}
+
+	return ""
+}
+
+func (d Direction) Left(number int) Direction {
+	if number == 0 {
+		return d
+	}
+
+	d = (4 + d - 1) % 4
+	return d.Left(number - 1)
+}
+
+func (d Direction) Right(number int) Direction {
+	if number == 0 {
+		return d
+	}
+	d = (d + 1) % 4
+	return d.Right(number - 1)
+}
+
+type Blizzard struct {
+	location  helpers.Coords
+	direction Direction
+}
+
+type Valley struct {
+	width, height     int
+	entrance          helpers.Coords
+	exit              helpers.Coords
+	walls             map[helpers.Coords]bool
+	blizzards         []Blizzard
+	blizzardPositions map[helpers.Coords]int
+	expedition        helpers.Coords
+}
+
+func (v *Valley) String() string {
+	var s strings.Builder
+
+	for y := 0; y < v.height; y++ {
+		for x := 0; x < v.width; x++ {
+			pos := helpers.NewCoords(x, y)
+			if v.walls[pos] {
+				fmt.Fprint(&s, "#")
+			} else if bcnt := v.blizzardPositions[pos]; bcnt > 0 {
+				if bcnt > 1 {
+					fmt.Fprintf(&s, "%d", bcnt)
+				} else {
+					fmt.Fprint(&s, v.BlizzardAtPos(pos).direction.String(true))
+				}
+			} else if v.expedition == pos {
+				fmt.Fprint(&s, "E")
+			} else {
+				fmt.Fprint(&s, ".")
+			}
+		}
+		fmt.Fprintln(&s)
+	}
+
+	return strings.TrimSuffix(s.String(), "\n")
+}
+
+func (v *Valley) DeepCopy() Valley {
+	newValley := Valley{
+		width:             v.width,
+		height:            v.height,
+		entrance:          v.entrance,
+		exit:              v.exit,
+		expedition:        v.expedition,
+		walls:             make(map[helpers.Coords]bool),
+		blizzardPositions: make(map[helpers.Coords]int),
+	}
+
+	newValley.blizzards = append(newValley.blizzards, v.blizzards...)
+	for k, v := range v.walls {
+		newValley.walls[k] = v
+	}
+	for k, v := range v.blizzardPositions {
+		newValley.blizzardPositions[k] = v
+	}
+
+	return newValley
+}
+
+func (v *Valley) BlizzardAtPos(pos helpers.Coords) *Blizzard {
+	for _, b := range v.blizzards {
+		if b.location == pos {
+			return &b
+		}
+	}
+
+	return nil
+}
+
+func (v *Valley) IsFree(pos helpers.Coords) bool {
+	if pos.X < 0 || pos.Y < 0 {
+		return false
+	}
+	return !v.walls[pos] && v.blizzardPositions[pos] == 0
+}
+
+func (v *Valley) Step() Direction {
+	// First move all blizzards
+	for i, _ := range v.blizzards {
+		v.MoveBlizzard(i)
+	}
+
+	// Move expedition
+	var valids []helpers.Coords
+	for _, n := range v.expedition.Neighbours(false) {
+		if v.IsFree(n) {
+			valids = append(valids, n)
+		}
+	}
+
+	if len(valids) == 0 {
+		if v.blizzardPositions[v.expedition] > 0 {
+			fmt.Printf("THE EXPEDITION GOT WIPED OUT BY A BLIZZARD AT %s\n", v.expedition.String())
+			return dead
+		}
+		// Expedition waits out this move
+		return wait
+	}
+
+	// sort valid options by distance to exit
+	sort.Slice(valids, func(i, j int) bool {
+		return valids[i].SimpleDist(v.exit) < valids[j].SimpleDist(v.exit)
+	})
+
+	var dir Direction
+	deadEnd := true
+	for _, m := range valids {
+		if m.X < v.expedition.X {
+			dir = west
+		}
+		if m.X > v.expedition.X {
+			dir = east
+		}
+		if m.Y < v.expedition.Y {
+			dir = north
+		}
+		if m.Y > v.expedition.Y {
+			dir = south
+		}
+
+		newValley := v.DeepCopy()
+		nextStep := newValley.Step()
+		if nextStep != dead {
+			deadEnd = false
+		}
+	}
+	if deadEnd {
+		return dead
+	}
+
+	return dir
+}
+
+func (v *Valley) Solve(showProgress bool) int {
+	var lastDir Direction
+	var steps int
+
+	for lastDir != dead && v.expedition != v.exit {
+		steps++
+		lastDir = v.Step()
+		if showProgress {
+			//fmt.Printf("Minute %d, move %s:\n%s\n\n", steps, lastDir.String(false), v.String())
+			fmt.Printf("Minute %d, Expedition %s -> %s\n", steps, lastDir.String(false), v.expedition.String())
+		}
+	}
+
+	return steps
+}
+
+func (v *Valley) MoveBlizzard(i int) {
+	v.blizzardPositions[v.blizzards[i].location]--
+
+	switch v.blizzards[i].direction {
+	case north:
+		v.blizzards[i].location = v.blizzards[i].location.Up(1)
+		if v.blizzards[i].location.Y == 0 {
+			v.blizzards[i].location.Y = v.height - 2
+		}
+	case east:
+		v.blizzards[i].location = v.blizzards[i].location.Right(1)
+		if v.blizzards[i].location.X == v.width-1 {
+			v.blizzards[i].location.X = 1
+		}
+	case south:
+		v.blizzards[i].location = v.blizzards[i].location.Down(1)
+		if v.blizzards[i].location.Y == v.height-1 {
+			v.blizzards[i].location.Y = 1
+		}
+	case west:
+		v.blizzards[i].location = v.blizzards[i].location.Left(1)
+		if v.blizzards[i].location.X == 0 {
+			v.blizzards[i].location.X = v.width - 2
+		}
+	}
+	v.blizzardPositions[v.blizzards[i].location]++
+}
+
+func NewValley(input []string) Valley {
+	valley := Valley{
+		width:             len(input[0]),
+		height:            len(input),
+		walls:             make(map[helpers.Coords]bool),
+		blizzardPositions: make(map[helpers.Coords]int),
+	}
+
+	for y, line := range input {
+		for x, c := range line {
+			pos := helpers.NewCoords(x, y)
+			switch c {
+			case '#':
+				valley.walls[pos] = true
+			case '.':
+				if y == 0 {
+					valley.entrance = pos
+				}
+				if y == len(input)-1 {
+					valley.exit = pos
+				}
+			case '>':
+				valley.blizzards = append(valley.blizzards, Blizzard{location: pos, direction: east})
+				valley.blizzardPositions[pos]++
+			case 'v':
+				valley.blizzards = append(valley.blizzards, Blizzard{location: pos, direction: south})
+				valley.blizzardPositions[pos]++
+			case '^':
+				valley.blizzards = append(valley.blizzards, Blizzard{location: pos, direction: north})
+				valley.blizzardPositions[pos]++
+			case '<':
+				valley.blizzards = append(valley.blizzards, Blizzard{location: pos, direction: west})
+				valley.blizzardPositions[pos]++
+			}
+		}
+	}
+
+	valley.expedition = valley.entrance
+
+	return valley
+}

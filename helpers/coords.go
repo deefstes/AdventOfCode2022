@@ -32,6 +32,42 @@ func (c Coords) Right(d int) Coords {
 	return NewCoords(c.X+d, c.Y)
 }
 
+func (c Coords) Rotate(dir, width, height int) Coords {
+	if dir == 0 {
+		return c
+	}
+	if dir > 1 {
+		c = c.Rotate(dir-1, width, height)
+		dir = 1
+	}
+	if dir < -1 {
+		c = c.Rotate(dir+1, width, height)
+		dir = -1
+	}
+
+	// Transform
+	c.X, c.Y = c.Y, c.X
+
+	switch dir {
+	case 1:
+		// Flip x
+		c.X = height - 1 - c.X
+	case -1:
+		// Flip Y
+		c.Y = width - 1 - c.Y
+	default:
+		return NewCoords(0, 0)
+	}
+
+	return c
+}
+
+func (c Coords) Wrap(width, height int) Coords {
+	c.X = (width + c.X) % width
+	c.Y = (height + c.Y) % height
+	return c
+}
+
 func (c1 *Coords) SimpleDist(c2 Coords) int {
 	dx := Abs(c1.X - c2.X)
 	dy := Abs(c1.Y - c2.Y)
@@ -58,6 +94,23 @@ func (c Coords) ManhattanNeighbourhood(dist int) []Coords {
 			neighbours = append(neighbours, c.Left(x).Up(y))
 			neighbours = append(neighbours, c.Down(x).Left(y))
 		}
+	}
+
+	return neighbours
+}
+
+func (c Coords) Neighbours(inclDiag bool) []Coords {
+	var neighbours []Coords
+	neighbours = append(neighbours, c.Up(1))
+	neighbours = append(neighbours, c.Right(1))
+	neighbours = append(neighbours, c.Down(1))
+	neighbours = append(neighbours, c.Left(1))
+
+	if inclDiag {
+		neighbours = append(neighbours, c.Up(1).Right(1))
+		neighbours = append(neighbours, c.Right(1).Down(1))
+		neighbours = append(neighbours, c.Down(1).Left(1))
+		neighbours = append(neighbours, c.Left(1).Up(1))
 	}
 
 	return neighbours

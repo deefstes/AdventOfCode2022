@@ -37,6 +37,13 @@ func Abs(val int) int {
 	return val
 }
 
+func Abs64(val int64) int64 {
+	if val < 0 {
+		return -val
+	}
+	return val
+}
+
 func Max(v1, v2 int) int {
 	if v1 > v2 {
 		return v1
@@ -62,4 +69,13 @@ func ReverseString(s string) string {
 
 	// return the reversed string.
 	return string(rns)
+}
+
+func SetCharInString(in string, r rune, i int) string {
+	if i >= len(in) {
+		return in
+	}
+	retval := []rune(in)
+	retval[i] = r
+	return string(retval)
 }
